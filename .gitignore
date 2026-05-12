@@ -8,6 +8,7 @@
 /.fleet
 /.idea
 /.nova
+storage/app/public/blog/*
 /.phpunit.cache
 /.vscode
 /.zed
