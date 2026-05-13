@@ -12,6 +12,7 @@ class Blog extends Model
         'blog_image',
         'content',
         'read_time',
+        'is_featured',
         'blog_category_id'
     ];
 
