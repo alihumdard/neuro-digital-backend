@@ -12,5 +12,10 @@ class Blog extends Model
         'blog_image',
         'content',
         'read_time',
+        'blog_category_id'
     ];
+
+    public function blogCategory (){
+        return $this->belongsTo(BlogCategory::class);
+    }
 }

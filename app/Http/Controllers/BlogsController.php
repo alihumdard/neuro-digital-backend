@@ -31,20 +31,21 @@ class BlogsController extends Controller
             // 'blog_image' => asset('storage/' . $this->$imagePath),
             'content' => $request->content,
             'read_time' => $request->read_time,
+            'blog_category_id' => $request->blog_category_id,
         ]);
 
         return response()->json([
-           
+
             'message' => 'Blog created successfully',
-           
+
         ]);
     }
 
     public function index()
     {
-        
- $blogs = Blog::all();
 
+        $blogs = Blog::with('blogCategory')->get();
+        
         return response()->json([
             'status' => true,
             'message' => 'Blogs fetched successfully',
