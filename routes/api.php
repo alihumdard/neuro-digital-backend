@@ -14,8 +14,12 @@ Route::get('/test', function () {
 Route::post('/contact-us', [InquiryController::class , 'inquiryStore'])->name('inquiry.store');
 // store blog data
 Route::post('/create/blog', [BlogsController::class , 'blogStore'])->name('create.blog');
+
+// update the blog 
+Route::post('/update/blog/{id}', [BlogsController::class , 'updateBlog'])->name('update.blog');
+
 Route::get('/blogs', [BlogsController::class , 'index'])->name('blog.index');
 //store blogs category 
 Route::post('/category', [BlogCategoriesController::class , 'storeBlogCategory'])->name('store.blogCategory');
-
-
+// Delete Blog api route
+Route::delete('/blog/delete/{id}', [BlogsController::class , 'destroy'])->name('delete.blog');
