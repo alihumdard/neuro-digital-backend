@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\BlogResource;
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BlogsController extends Controller
 {
@@ -84,6 +85,17 @@ class BlogsController extends Controller
             'read_time' => 'nullable|integer|min:1',
         ]);
 
+      // Handle image update
+     if ($request->hasFile('blog_image')) {
+
+    // Delete old image if exists
+    if ($blog->blog_image) {
+        // dd($blog->blog_image);
+        if (Storage::disk('public')->exists($blog->blog_image)) {
+            Storage::disk('public')->delete($blog->blog_image);
+        }
+    }
+
         // upload image if exists
         if ($request->hasFile('blog_image')) {
             $imagePath = $request->file('blog_image')->store('blogs', 'public');
@@ -103,4 +115,5 @@ class BlogsController extends Controller
             'data' => new BlogResource($blog)
         ]);
     }
+}
 }

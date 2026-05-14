@@ -10,16 +10,29 @@ Route::get('/test', function () {
         'message' => 'API route is working',
     ]);
 });
-
+//------------------------------ Routes for contact us page------------------
+// contact-us form  submission
 Route::post('/contact-us', [InquiryController::class , 'inquiryStore'])->name('inquiry.store');
+
+//-----------------------------------Routes for Blogs-----------------------------
+
 // store blog data
 Route::post('/create/blog', [BlogsController::class , 'blogStore'])->name('create.blog');
-
 // update the blog 
 Route::post('/update/blog/{id}', [BlogsController::class , 'updateBlog'])->name('update.blog');
-
+// getting all blogs with categories
 Route::get('/blogs', [BlogsController::class , 'index'])->name('blog.index');
-//store blogs category 
-Route::post('/category', [BlogCategoriesController::class , 'storeBlogCategory'])->name('store.blogCategory');
 // Delete Blog api route
 Route::delete('/blog/delete/{id}', [BlogsController::class , 'destroy'])->name('delete.blog');
+
+//------------------------ Routes for blog's categories----------------------------------
+
+// getting all blog's  categories
+Route::get('/categories', [BlogCategoriesController::class , 'index'])->name('category.index');
+//store blogs category 
+Route::post('/add/category', [BlogCategoriesController::class , 'storeBlogCategory'])->name('update.blogCategory');
+//update category of blog
+Route::post('/category/update/{id}', [BlogCategoriesController::class , 'update'])->name('update.blogCategory');
+// Delete category
+Route::delete('/category/delete/{id}', [BlogCategoriesController::class , 'destroy'])->name('delete.blog');
+
