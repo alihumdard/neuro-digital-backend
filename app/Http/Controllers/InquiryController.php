@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InquiryAdminNotification;
+use App\Mail\InquiryUserConfirmation;
 use App\Models\Inquiry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class InquiryController extends Controller
@@ -29,7 +33,7 @@ class InquiryController extends Controller
             ]
         ]);
 
-        Inquiry::create([
+        $inquiry = Inquiry::create([
             'type' => 'contact',
             'name' => $request->name,
             'email' => $request->email,
@@ -38,6 +42,8 @@ class InquiryController extends Controller
             'response_method' => $request->response_method,
             'phone_number' => $request->phone_number
         ]);
+
+        $this->sendInquiryEmails($inquiry);
 
         return response()->json([
             "message" => "Your inquiry submited successfully"
@@ -50,12 +56,14 @@ class InquiryController extends Controller
             'email' => 'required|email',
         ]);
 
-        Inquiry::create([
+        $inquiry = Inquiry::create([
             'type' => 'newsletter',
             'email' => $request->email,
             'subject' => 'Newsletter subscription',
             'response_method' => 'email',
         ]);
+
+        $this->sendInquiryEmails($inquiry);
 
         return response()->json([
             'message' => 'Thanks for subscribing.',
@@ -70,7 +78,7 @@ class InquiryController extends Controller
             'message' => 'nullable|string',
         ]);
 
-        Inquiry::create([
+        $inquiry = Inquiry::create([
             'type' => 'get_started',
             'name' => $request->name,
             'email' => $request->email,
@@ -79,9 +87,29 @@ class InquiryController extends Controller
             'response_method' => 'email',
         ]);
 
+        $this->sendInquiryEmails($inquiry);
+
         return response()->json([
             'message' => 'Thanks, we will be in touch shortly.',
         ]);
+    }
+
+    private function sendInquiryEmails(Inquiry $inquiry): void
+    {
+        $adminEmail = config('mail.admin_notification_address');
+
+        try {
+            if ($adminEmail) {
+                Mail::to($adminEmail)->send(new InquiryAdminNotification($inquiry));
+            }
+
+            if ($inquiry->email) {
+                Mail::to($inquiry->email)->send(new InquiryUserConfirmation($inquiry));
+            }
+        } catch (\Throwable $exception) {
+            // Do not fail the request if email delivery fails; the inquiry is already saved.
+            Log::error('Failed to send inquiry emails: ' . $exception->getMessage());
+        }
     }
 
     public function index(Request $request)

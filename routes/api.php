@@ -44,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/update/blog/{id}', [BlogsController::class , 'updateBlog'])->name('update.blog');
     // Delete Blog api route
     Route::delete('/blog/delete/{id}', [BlogsController::class , 'destroy'])->name('delete.blog');
+    // upload an image for use inside blog content
+    Route::post('/upload-image', [BlogsController::class , 'uploadContentImage'])->name('upload.contentImage');
 });
 
 //------------------------ Routes for blog's categories----------------------------------
