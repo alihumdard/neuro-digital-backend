@@ -16,23 +16,29 @@ Route::post('/contact-us', [InquiryController::class , 'inquiryStore'])->name('i
 
 //-----------------------------------Routes for Blogs-----------------------------
 
-// store blog data
-Route::post('/create/blog', [BlogsController::class , 'blogStore'])->name('create.blog');
-// update the blog 
-Route::post('/update/blog/{id}', [BlogsController::class , 'updateBlog'])->name('update.blog');
 // getting all blogs with categories
 Route::get('/blogs', [BlogsController::class , 'index'])->name('blog.index');
-// Delete Blog api route
-Route::delete('/blog/delete/{id}', [BlogsController::class , 'destroy'])->name('delete.blog');
+
+Route::middleware('admin.key')->group(function () {
+    // store blog data
+    Route::post('/create/blog', [BlogsController::class , 'blogStore'])->name('create.blog');
+    // update the blog
+    Route::post('/update/blog/{id}', [BlogsController::class , 'updateBlog'])->name('update.blog');
+    // Delete Blog api route
+    Route::delete('/blog/delete/{id}', [BlogsController::class , 'destroy'])->name('delete.blog');
+});
 
 //------------------------ Routes for blog's categories----------------------------------
 
 // getting all blog's  categories
 Route::get('/categories', [BlogCategoriesController::class , 'index'])->name('category.index');
-//store blogs category 
-Route::post('/add/category', [BlogCategoriesController::class , 'storeBlogCategory'])->name('update.blogCategory');
-//update category of blog
-Route::post('/category/update/{id}', [BlogCategoriesController::class , 'update'])->name('update.blogCategory');
-// Delete category
-Route::delete('/category/delete/{id}', [BlogCategoriesController::class , 'destroy'])->name('delete.blog');
+
+Route::middleware('admin.key')->group(function () {
+    //store blogs category
+    Route::post('/add/category', [BlogCategoriesController::class , 'storeBlogCategory'])->name('create.blogCategory');
+    //update category of blog
+    Route::post('/category/update/{id}', [BlogCategoriesController::class , 'update'])->name('update.blogCategory');
+    // Delete category
+    Route::delete('/category/delete/{id}', [BlogCategoriesController::class , 'destroy'])->name('delete.blogCategory');
+});
 
