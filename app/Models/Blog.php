@@ -12,10 +12,16 @@ class Blog extends Model
         'slug',
         'short_description',
         'blog_image',
+        'image_alt_text',
         'content',
         'read_time',
         'is_featured',
-        'blog_category_id'
+        'status',
+        'blog_category_id',
+        'meta_title',
+        'meta_description',
+        'target_keyword',
+        'secondary_keywords',
     ];
 
     public function blogCategory (){

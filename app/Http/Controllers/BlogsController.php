@@ -13,30 +13,40 @@ class BlogsController extends Controller
     {
         $request->validate([
             'blog_title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'short_description' => 'nullable|string|max:500',
-            'blog_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'blog_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'blog_image_url' => 'nullable|url|max:2048',
             'content' => 'nullable|string',
             'read_time' => 'nullable|integer|min:1',
             'blog_category_id' => 'required|exists:blog_categories,id',
             'is_featured' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'target_keyword' => 'nullable|string|max:255',
+            'secondary_keywords' => 'nullable|string|max:500',
+            'image_alt_text' => 'nullable|string|max:255',
+            'status' => 'nullable|in:draft,published',
         ]);
 
-        $imagePath = null;
-
-        if ($request->hasFile('blog_image')) {
-            $imagePath = $request->file('blog_image')->store('blogs', 'public');
-        }
+        $imagePath = $this->resolveIncomingImage($request);
+        $slugSource = $request->filled('slug') ? $request->slug : $request->blog_title;
 
         $blog = Blog::create([
             'blog_title' => $request->blog_title,
-            'slug' => Blog::generateUniqueSlug($request->blog_title),
+            'slug' => Blog::generateUniqueSlug($slugSource),
             'short_description' => $request->short_description,
             'blog_image' => $imagePath,
-            // 'blog_image' => asset('storage/' . $this->$imagePath),
+            'image_alt_text' => $request->image_alt_text,
             'content' => $request->content,
             'read_time' => $request->read_time,
             'blog_category_id' => $request->blog_category_id,
             'is_featured' => $request->boolean('is_featured'),
+            'status' => $request->status ?: 'published',
+            'meta_title' => $request->meta_title,
+            'meta_description' => $request->meta_description,
+            'target_keyword' => $request->target_keyword,
+            'secondary_keywords' => $request->secondary_keywords,
         ]);
 
         return response()->json([
@@ -83,30 +93,44 @@ class BlogsController extends Controller
         // validation
         $validated = $request->validate([
             'blog_title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255',
             'short_description' => 'nullable|string|max:500',
-            'blog_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'blog_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'blog_image_url' => 'nullable|url|max:2048',
             'content' => 'nullable|string',
             'read_time' => 'nullable|integer|min:1',
             'blog_category_id' => 'required|exists:blog_categories,id',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'target_keyword' => 'nullable|string|max:255',
+            'secondary_keywords' => 'nullable|string|max:500',
+            'image_alt_text' => 'nullable|string|max:255',
+            'status' => 'nullable|in:draft,published',
         ]);
 
-        // Handle image update
-        if ($request->hasFile('blog_image')) {
-            // Delete old image if exists
-            if ($blog->blog_image && Storage::disk('public')->exists($blog->blog_image)) {
+        unset($validated['blog_image_url']);
+
+        // Handle image update (uploaded file takes priority, then an external URL, otherwise keep existing)
+        $imagePath = $this->resolveIncomingImage($request);
+
+        if ($imagePath !== null) {
+            if ($request->hasFile('blog_image') && $blog->blog_image && ! str_starts_with($blog->blog_image, 'http') && Storage::disk('public')->exists($blog->blog_image)) {
                 Storage::disk('public')->delete($blog->blog_image);
             }
 
-            $imagePath = $request->file('blog_image')->store('blogs', 'public');
             $validated['blog_image'] = $imagePath;
         }
 
         // handle featured flag
         $validated['is_featured'] = $request->boolean('is_featured');
 
-        // regenerate slug only when the title actually changed
-        if ($validated['blog_title'] !== $blog->blog_title) {
-            $validated['slug'] = Blog::generateUniqueSlug($validated['blog_title'], $blog->id);
+        // regenerate slug when the user-provided slug or title changed
+        $desiredSlug = $request->filled('slug') ? $request->slug : $validated['blog_title'];
+
+        if (\Illuminate\Support\Str::slug($desiredSlug) !== $blog->slug) {
+            $validated['slug'] = Blog::generateUniqueSlug($desiredSlug, $blog->id);
+        } else {
+            unset($validated['slug']);
         }
 
         // update blog
@@ -122,7 +146,7 @@ class BlogsController extends Controller
     public function uploadContentImage(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         $path = $request->file('image')->store('blog-content', 'public');
@@ -131,5 +155,18 @@ class BlogsController extends Controller
             'message' => 'Image uploaded successfully',
             'url' => asset('storage/' . $path),
         ]);
+    }
+
+    private function resolveIncomingImage(Request $request): ?string
+    {
+        if ($request->hasFile('blog_image')) {
+            return $request->file('blog_image')->store('blogs', 'public');
+        }
+
+        if ($request->filled('blog_image_url')) {
+            return $request->input('blog_image_url');
+        }
+
+        return null;
     }
 }
